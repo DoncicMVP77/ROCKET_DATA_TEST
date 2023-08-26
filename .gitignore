@@ -1,0 +1,17 @@
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+docker
+/docker/postgresql/data/
+/.idea/
+/project/.idea
+.vscode/settings.json
