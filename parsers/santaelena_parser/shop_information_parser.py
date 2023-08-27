@@ -105,17 +105,20 @@ def fetch_shop_name(html: BeautifulSoup):
 
 def fetch_shop_working_hours(html: BeautifulSoup):
 
-    list_p_shop_working_hours = html.find('div', class_='elementor-text-editor elementor-clearfix')\
-                                    .find_all('p')[3:]
+    list_p_shop_working_hours = html.find('div', class_='elementor-text-editor elementor-clearfix')
 
-    list_shop_working_hours = [
-        p_shop_working_hours.text for p_shop_working_hours in list_p_shop_working_hours
-    ]
+    test = list_p_shop_working_hours.find(
+        lambda tag: tag.name in ['p', 'h4'] and 'Horario de atención' in tag.get_text()
+    )
 
-    return list_shop_working_hours
+    hello = test.find_next_siblings('p')
 
+    working_days = [i.text.strip() for i in hello]
 
+    if working_days == []:
+        return test.text.split(':')[1].strip()
 
+    return working_days
 
 
 def extract_phone_number(string_shop):
@@ -137,10 +140,13 @@ def fetch_shop_phone_numbers_list(html: BeautifulSoup):
     return string_phone_number
 
 
-
-
 def fetch_shop_address(html: BeautifulSoup):
-    pass
+
+    string_shop = html.find('div', class_='elementor-text-editor elementor-clearfix')
+
+    string_shop_address = string_shop.find_all(lambda tag: tag.name in ['p', 'h4'] and 'Dirección' in tag.get_text())
+
+    print(string_shop_address)
 
 
 def fetch_shop_latlon(dict_shop_information: dict):
