@@ -241,7 +241,7 @@ def _fetch_cafe_address(dict_cafe_information: dict) -> str:
 
 
 def _format_cafe_address(cafe_address: str, string_cafe_city_name: str) -> str:
-    formatted_string_cafe_address = f"{cafe_address} + ', ' + {string_cafe_city_name}".strip().replace('\u200b', '')
+    formatted_string_cafe_address = f"{cafe_address}, {string_cafe_city_name}".strip().replace('\u200b', '')
 
     return formatted_string_cafe_address
 
