@@ -4,7 +4,7 @@ from requests import Session
 from bs4 import BeautifulSoup
 
 from decorators.format_information_decorator import format_phone_numbers_decorator, \
-    format_dentalia_hospital_name_decorator
+    format_dentalia_hospital_name_decorator, format_hospital_latlon_decorator, format_hospital_working_hours_decorator
 from utils.requests_utils import fetch_data, init_session, close_session
 
 params = {
@@ -34,19 +34,25 @@ headers = {
 hospital_detail_url = 'https://dentalia.com/wp-json/jet-engine/v2/get-map-marker-info/'
 
 
-def get_list_hospital_information(list_hospitals_id_and_latlon: list[dict], session: Session):
+def get_list_hospital_information(
+        list_hospitals_id_and_latlon: list[dict],
+        browser_session: Session
+) -> dict:
+
     hospitals_information_list = []
 
     for hospital_dict in list_hospitals_id_and_latlon:
 
         hospital_cities_response_text = get_hospital_information_response_by_hospital_id(
             hospital_id=hospital_dict['hospital_id'],
-            session=session
+            browser_session=browser_session
         )
 
         dict_hospital_information = fetch_hospital_information(
-            hospital_information_response_text=hospital_cities_response_text
+            hospital_information_response_text=hospital_cities_response_text,
+            hospital_dict=hospital_dict
         )
+
 
         # formatter_dict = format_hospital_information_dict(
         #     hospital_information_dict=dict_hospital_information
@@ -54,7 +60,11 @@ def get_list_hospital_information(list_hospitals_id_and_latlon: list[dict], sess
 
         hospitals_information_list.append(dict_hospital_information)
 
-    return hospitals_information_list
+    hospitals_information_dict = {
+        'hospitals': hospitals_information_list
+    }
+
+    return hospitals_information_dict
 
 
 def fetch_hospital_information(
@@ -64,125 +74,223 @@ def fetch_hospital_information(
 
     html = BeautifulSoup(hospital_information_response_text, 'html.parser')
 
-    hospital_name = fetch_hospital_name(html=html)
+    string_hospital_name = _get_hospital_name(html=html)
 
-    hospital_address = fetch_hospital_address(html=html)
+    string_hospital_address = _get_hospital_address(html=html)
 
-    hospital_phones = fetch_hospital_phones(html=html)
+    list_hospital_phones = _get_hospital_phone_numbers(html=html)
 
-    string_hospital_working_hours = fetch_working_hours(html=html)
+    string_hospital_working_hours = _get_hospital_working_hours(html=html)
 
-    dict_hospital_information = {
-        'name': hospital_name,
-        'address': hospital_address,
-        'phones': hospital_phones,
-        'working_hours': string_hospital_working_hours
-    }
+    list_hospital_latlon = _get_hospital_latlon(hospital_dict=hospital_dict)
 
-    print(dict_hospital_information)
+    dict_hospital_information =generate_hospital_information_dict(
+        string_hospital_name=string_hospital_name,
+        string_hospital_address=string_hospital_address,
+        list_hospital_phone_numbers=list_hospital_phones,
+        list_string_working_hours=string_hospital_working_hours,
+        list_string_latlon=list_hospital_latlon
+    )
 
     return dict_hospital_information
 
 
-@format_dentalia_hospital_name_decorator
-def fetch_hospital_name(html: BeautifulSoup) -> str:
+def generate_hospital_information_dict(
+    string_hospital_name: str,
+    string_hospital_address: str,
+    list_hospital_phone_numbers: list[str],
+    list_string_working_hours: list[str],
+    list_string_latlon: list[float, float]
+) -> dict:
+
+    dict_hospital_information = {
+        'name': string_hospital_name,
+        'address': string_hospital_address,
+        'phones': list_hospital_phone_numbers,
+        'working_hours': list_string_working_hours,
+        'latlon': list_string_latlon
+    }
+
+    return dict_hospital_information
+
+def _get_hospital_name(html: BeautifulSoup) -> str:
+    string_hospital_name = _fetch_hospital_name(html=html)
+
+    formatted_hospital_name = _format_hospital_name(
+        string_hospital_name=string_hospital_name
+    )
+
+    return formatted_hospital_name
+
+
+def _fetch_hospital_name(html: BeautifulSoup) -> str:
 
     try:
         hospital_name = str(html.find('h3', class_='elementor-heading-title elementor-size-default').text)
-    except Exception as e:
+    except AttributeError as e:
         hospital_name = ''
     else:
         return hospital_name
 
 
-def fetch_hospital_address(html: BeautifulSoup) -> str:
+def _format_hospital_name(string_hospital_name: str) -> str:
+    formatted_hospital_name = 'dentalia ' + string_hospital_name
+
+    return formatted_hospital_name
+
+
+def _get_hospital_address(html: BeautifulSoup) -> str:
+
+    string_hospital_address = _fetch_hospital_address(html=html)
+
+    formatted_string_hospital_address = _format_hospital_address(
+        string_hospital_address=string_hospital_address
+    )
+
+    return formatted_string_hospital_address
+
+
+def _fetch_hospital_address(html: BeautifulSoup) -> str:
 
     try:
         hospital_address = str(
             html.find_all('div', class_='jet-listing jet-listing-dynamic-field display-inline')[0].
             find('div', class_='jet-listing-dynamic-field__content').text
-        ).strip('.')
-    except Exception:
+        )
+    except AttributeError as e:
         hospital_address = ''
     else:
         return hospital_address
 
 
-def fetch_hospital_latlon(html: BeautifulSoup) -> list[float, float]:
-    pass
+def _format_hospital_address(string_hospital_address: str) -> str:
+    return string_hospital_address.strip('.')
 
 
-@format_phone_numbers_decorator
-def fetch_hospital_phones(html: BeautifulSoup) -> str:
+def _get_hospital_latlon(hospital_dict: dict) -> list[float, float]:
+    dict_hospital_latlon = _fetch_hospital_latlon(hospital_dict=hospital_dict)
+
+    formatted_list_hospital_latlon = _format_hospital_latlon(
+        dict_hospital_latlon=dict_hospital_latlon
+    )
+
+    return formatted_list_hospital_latlon
+
+
+def _fetch_hospital_latlon(hospital_dict: dict) -> dict:
+
+    return hospital_dict['latlon']
+
+
+def _format_hospital_latlon(dict_hospital_latlon: dict) -> list[float, float]:
+
+    formatted_list_hospital_latlon = [
+        float(dict_hospital_latlon['lat']),
+        float(dict_hospital_latlon['lng'])
+    ]
+
+    return formatted_list_hospital_latlon
+
+
+def _get_hospital_phone_numbers(html: BeautifulSoup) -> list:
+
+    string_hospital_phone_numbers = _fetch_hospital_phone_numbers(html=html)
+
+    formatted_list_phone_numbers = _format_hospital_phone_numbers(
+        string_hospital_phone_numbers=string_hospital_phone_numbers
+    )
+
+    return formatted_list_phone_numbers
+
+
+def _fetch_hospital_phone_numbers(html: BeautifulSoup) -> str:
 
     try:
         hospital_phones = str(
             html.find_all('div', class_='jet-listing jet-listing-dynamic-field display-inline')[2].
             find('div', class_='jet-listing-dynamic-field__content').text
-        ).strip()
-    except Exception:
+        )
+    except AttributeError as e:
         hospital_phones = ''
     else:
         return hospital_phones
 
 
-def fetch_working_hours(html: BeautifulSoup) -> str:
+def _format_hospital_phone_numbers(string_hospital_phone_numbers: str) -> list[str]:
+    list_hospital_phone_numbers = string_hospital_phone_numbers.strip().strip('.').split('\r')
 
-    try:
-        hospital_working_hours_string = str(
-            html.find_all('div', class_='jet-listing jet-listing-dynamic-field display-inline')[1].
-            find('div', class_='jet-listing-dynamic-field__content').text
-        ).strip()
-    except Exception:
-        hospital_working_hours_string = ''
-    else:
-        return hospital_working_hours_string
-
-
-def format_hospital_information_dict(hospital_information_dict: dict):
-
-    phone_numbers = format_hospital_phone_numbers(
-        hospital_phone_numbers_string=hospital_information_dict['phones']
-    )
-
-
-def
-
-def format_hospital_phone_numbers(hospital_phone_numbers_string: str):
-
-    list_hospital_phone_numbers = hospital_phone_numbers_string.split('\r')
-
-    list_formatter_phone_numbers = [
+    formatted_list_phone_numbers = [
         "".join(hospital_phone_number.strip().split())
         for hospital_phone_number in list_hospital_phone_numbers
     ]
 
-    print(list_formatter_phone_numbers)
-
-    return list_hospital_phone_numbers
+    return formatted_list_phone_numbers
 
 
+def _get_hospital_working_hours(html: BeautifulSoup) -> list[str]:
 
-def get_hospital_information_response_by_hospital_id(hospital_id: str, session: Session):
+    string_hospital_working_hours = _fetch_working_hours(html=html)
+
+    formatted_list_hospital_working_hours = _format_hospital_working_hours(
+        string_hospital_working_hours=string_hospital_working_hours
+    )
+
+    return formatted_list_hospital_working_hours
+
+
+def _fetch_working_hours(html: BeautifulSoup) -> str:
+
+    try:
+        string_hospital_working_hours = str(
+            html.find_all('div', class_='jet-listing jet-listing-dynamic-field display-inline')[1].
+            find('div', class_='jet-listing-dynamic-field__content').text
+        ).strip()
+
+    except AttributeError as e:
+        hospital_working_hours_string = ''
+    else:
+        return string_hospital_working_hours
+
+
+def _format_hospital_working_hours(string_hospital_working_hours: str) -> list[str]:
+
+    formatted_string_hospital_working_hours = re.sub(
+        "^\s+|\n|\s+$",
+        " ",
+        re.sub("^\s+|\r|\s+$", "", string_hospital_working_hours)
+    ).strip()
+
+    return [formatted_string_hospital_working_hours]
+
+
+def get_hospital_information_response_by_hospital_id(
+        hospital_id: str,
+        browser_session: Session
+) -> str:
+
     params['post_id'] = hospital_id
 
     hospital_cities_response = fetch_data(
         url=hospital_detail_url,
-        session=session,
+        browser_session=browser_session,
         params=params
     )
-
-    print(hospital_cities_response)
 
     return hospital_cities_response['html']
 
 
 if __name__ == '__main__':
 
-    session = init_session(headers=headers)
+    browser_session = init_session(headers=headers)
 
-    hospital_information_list = get_list_hospital_information(session=session, list_hospitals_id_and_latlon=['1327'])
+    hospital_information_list = get_list_hospital_information(browser_session=browser_session, list_hospitals_id_and_latlon=[{
+            "hospital_id": 1353,
+            "latlon": {
+                "lat": "21.9245323",
+                "lng": "-102.2897871"
+            }
+        }])
 
     print(hospital_information_list)
 
-    close_session(session=session)
+    close_session(browser_session=browser_session)

@@ -2,35 +2,14 @@ from itertools import groupby
 
 from requests import Session
 
-from decorators.format_information_decorator import format_hospital_latlon_decorator
+from config import YAPDOMIK_BASE_HEADERS
 from parsers.yapdomik_parser.cities_url_parser import get_cities_url_list
 from parsers.yapdomik_parser.yapdomik_utils import extract_json_information_from_response_string
-
 from utils.general_utils import convert_json_to_dict
-from utils.requests_utils import fetch_data, init_browser_session, close_browser_session
+from utils.requests_utils import fetch_data, init_session, close_session
 
 
-headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
-              'application/signed-exchange;v=b3;q=0.7',
-    'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Cache-Control': 'max-age=0',
-    'Connection': 'keep-alive',
-    'Referer': 'https://omsk.yapdomik.ru/',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'same-origin',
-    'Sec-Fetch-User': '?1',
-    'Upgrade-Insecure-Requests': '1',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 '
-                  'Safari/537.36',
-    'sec-ch-ua': '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-}
-
-
-def get_cafes_information_list(list_city_url: list[str], browser_session: Session):
+def get_cafes_information_list(list_city_url: list[str], browser_session: Session) -> dict:
 
     list_all_cafes_information = []
 
@@ -54,7 +33,9 @@ def get_cafes_information_list(list_city_url: list[str], browser_session: Sessio
 
         list_all_cafes_information += list_cafes_information
 
-    return list_all_cafes_information
+    dict_all_cafes_information = {'cafes': list_all_cafes_information}
+
+    return dict_all_cafes_information
 
 
 def fetch_list_cafes_information(dict_cafes_information_response: dict) -> list[dict]:
@@ -160,8 +141,6 @@ def _format_cafe_working_hours(list_cafe_working_hours: list):
     tewo_list = []
 
     for hour in default_hours:
-        temp_dict = {}
-
         day_name = day_names[hour['day']]
 
         if hour['from'] is None and hour['to'] is None:
@@ -190,9 +169,7 @@ def _format_cafe_working_hours(list_cafe_working_hours: list):
 
     grouped_data = {}
 
-    key_func = lambda x: x['time']
-
-    for key, group in groupby(tewo_list, key_func):
+    for key, group in groupby(tewo_list, lambda x: x['time']):
         if key in grouped_data:
             grouped_data[key] = list(group) + grouped_data[key]
 
@@ -331,7 +308,7 @@ def get_cafes_information_response_by_city(
 
 if __name__ == '__main__':
 
-    browser_session = init_browser_session(headers=headers)
+    browser_session = init_session(headers=YAPDOMIK_BASE_HEADERS)
 
     list_cities_url = get_cities_url_list(browser_session=browser_session)
 
@@ -339,4 +316,4 @@ if __name__ == '__main__':
 
     print(list_cafes_information)
 
-    close_browser_session(browser_session=browser_session)
+    close_session(browser_session=browser_session)
