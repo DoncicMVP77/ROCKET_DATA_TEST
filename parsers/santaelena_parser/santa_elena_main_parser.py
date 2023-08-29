@@ -1,6 +1,6 @@
 from config import SANTA_ELENA_BASE_HEADERS
 from parsers.santaelena_parser.cities_url_parser import get_cities_url_list
-from parsers.santaelena_parser.shop_information_parser import get_shops_information_list
+from parsers.santaelena_parser.santa_elena_shop_information_parser import get_shops_information_list
 from utils.requests_utils import close_session, init_session
 
 
