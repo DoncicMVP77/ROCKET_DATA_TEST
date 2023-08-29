@@ -14,7 +14,6 @@ def worker_handler():
     json_hospitals_information = convert_dict_to_json(dict_hospitals_information)
 
     save_json(json_object=json_hospitals_information, path_object=DENTAIL_FILE_PATH)
-
     dict_shops_information = main_santa_elena_parser_handler()
 
     json_shops_information = convert_dict_to_json(dict_shops_information)
