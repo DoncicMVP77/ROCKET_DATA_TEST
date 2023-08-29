@@ -50,7 +50,7 @@ def fetch_list_cafes_information(dict_cafes_information_response: dict) -> list[
         dict_cafes_information_response=dict_cafes_information_response
     )
 
-    for dict_cafe_information in dict_cafes_information_response['cafes']:
+    for dict_cafe_information in dict_cafes_information_response['shops']:
         string_cafe_name = _get_cafe_name()
 
         string_cafe_address = _get_cafe_cafe_address(
