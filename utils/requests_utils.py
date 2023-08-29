@@ -18,19 +18,19 @@ base_proxies = {
 
 
 def fetch_data(
-    session: Session,
+    browser_session: Session,
     url: str,
     headers: Optional[dict] = None,
     cookies: Optional[dict] = None,
     params: Optional[dict] = None
 ) -> Union[dict, str]:
 
-    session.headers.update(headers) if headers is not None else None
+    browser_session.headers.update(headers) if headers is not None else None
 
-    session.cookies.update(cookies) if cookies is not None else None
+    browser_session.cookies.update(cookies) if cookies is not None else None
 
     try:
-        response = session.get(url=url, params=params)
+        response = browser_session.get(url=url, params=params)
         response.raise_for_status()
     except HTTPError as ex:
         print(ex.response)
@@ -47,7 +47,7 @@ def init_session(
     proxies: Optional[dict] = None
 ) -> Session:
 
-    session = Session()
+    browser_session = Session()
 
     retries = Retry(
         total=10,
@@ -56,17 +56,17 @@ def init_session(
         redirect=30
     )
 
-    session.mount('https://', HTTPAdapter(max_retries=retries, pool_maxsize=30))
-    session.mount('http://', HTTPAdapter(max_retries=retries, pool_maxsize=30))
+    browser_session.mount('https://', HTTPAdapter(max_retries=retries, pool_maxsize=30))
+    browser_session.mount('http://', HTTPAdapter(max_retries=retries, pool_maxsize=30))
 
-    session.headers.update(headers if headers is not None else base_headers)
-    session.cookies.update(cookies if cookies is not None else base_cookies)
+    browser_session.headers.update(headers if headers is not None else base_headers)
+    browser_session.cookies.update(cookies if cookies is not None else base_cookies)
 
-    session.proxies.update(cookies if cookies is not None else base_cookies)
+    browser_session.proxies.update(cookies if cookies is not None else base_cookies)
 
-    return session
+    return browser_session
 
 
-def close_session(session: Session) -> None:
+def close_session(browser_session: Session) -> None:
 
-    session.close()
+    browser_session.close()
