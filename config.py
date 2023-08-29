@@ -1,8 +1,11 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 GOOGLE_GEOCODING_API_KEY = os.getenv('GOOGLE_GEOCODING_API_KEY')
-
 
 YAPDOMIK_BASE_HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
@@ -155,3 +158,7 @@ DENTAIL_FILE_PATH = Path.cwd() / 'static' / 'dentail_hospitals.json'
 SANTA_ELENA_FILE_PATH = Path.cwd() / 'static' / 'santa_elena_shops.json'
 
 YAPDOMIK_FILE_PATH = Path.cwd() / 'static' / 'yapdomik_cafes.json'
+
+
+if __name__ == '__main__':
+    print(GOOGLE_GEOCODING_API_KEY)
