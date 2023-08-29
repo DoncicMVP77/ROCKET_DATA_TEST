@@ -16,6 +16,8 @@ def main_yapdomik_parser_handler():
 
     close_session(browser_session=browser_session)
 
+    return list_cafes_information
+
 
 if __name__ == '__main__':
     main_yapdomik_parser_handler()
