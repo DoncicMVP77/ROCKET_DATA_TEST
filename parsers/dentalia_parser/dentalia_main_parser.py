@@ -1,4 +1,4 @@
-from config import DENTALIA_HOPSITAL_CITIES_URL
+from config import DENTALIA_HOPSITAL_CITIES_URL, DENTALIA_BASE_HEADERS
 from parsers.dentalia_parser.cities_id_parser import get_list_cities_id
 from parsers.dentalia_parser.hospital_id_and_latlon_parser import get_list_hospitals_id_and_latlon
 from parsers.dentalia_parser.hospital_information_parser import get_list_hospital_information
@@ -8,7 +8,7 @@ from utils.requests_utils import init_session, close_session
 
 def main_dentalia_parser_handler():
     browser_session = init_session(
-        headers=DENTALIA_HOPSITAL_CITIES_URL
+        headers=DENTALIA_BASE_HEADERS
     )
 
     list_cities_id = get_list_cities_id(
