@@ -11,3 +11,8 @@ def get_place_coordinates_by_address(place_address: str):
 
     if location:
         return {'latitude': location.latitude, 'longitude': location.longitude}
+
+
+if __name__ == '__main__':
+    print(get_place_coordinates_by_address('47 W 13th St, New York'))
+
